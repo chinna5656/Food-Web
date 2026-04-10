@@ -56,6 +56,12 @@
 
 ## 4) ฟังก์ชันและ API ที่มี
 
+หมายเหตุเชิงสถาปัตยกรรม:
+
+- ทุก endpoint ใน `app/api/*` ใช้รูปแบบ route handler แบบบาง
+- business logic ถูกย้ายไปไว้ที่ `lib/backend/*.service.ts`
+- การจัดการ error ใช้มาตรฐานเดียวผ่าน `lib/backend/errors.ts` และ `lib/backend/response.ts`
+
 ## 4.1 Authentication
 
 - `POST /api/auth/register`
@@ -99,12 +105,28 @@
 
 - `GET /api/chat/advisor`
   - โหลดบริบทผู้ใช้และประวัติแชท
+  - ส่งค่าการตั้งค่า AI กลับใน `ai.enabled`
 - `POST /api/chat/advisor`
   - ส่งข้อความเพื่อรับคำแนะนำ โดยอ้างอิงประวัติย้อนหลังหลายข้อความ
+  - ฝั่ง backend จะพยายามเรียก AI ก่อน และ fallback เป็น rule-based อัตโนมัติเมื่อ AI ใช้ไม่ได้
+  - ส่งค่า engine กลับเป็น `ai` หรือ `rule-based`
 - `DELETE /api/chat/advisor?id=MESSAGE_ID`
   - ลบข้อความรายรายการ
 - `DELETE /api/chat/advisor?all=true`
   - ล้างประวัติแชททั้งหมดของผู้ใช้
+
+### โครง backend สำหรับ AI
+
+- `lib/ai-advisor.ts`
+  - จัดการเรียก API ของ AI provider จากฝั่งเซิร์ฟเวอร์เท่านั้น
+  - รับ context ผู้ใช้ + history และสร้าง prompt เพื่อให้ตอบแบบเฉพาะบุคคล
+- `lib/backend/chat.service.ts`
+  - เป็นจุดรวม business logic ของแชททั้งหมด (load/send/delete/clear)
+  - เก็บข้อความลงฐานข้อมูลผ่าน `ChatMessage`
+  - เลือกใช้ AI ก่อน และ fallback เป็น rule-based โดยอัตโนมัติ
+- `app/api/chat/advisor/route.ts`
+  - ทำหน้าที่เป็น controller บาง เรียกใช้ chat service และคืนผลลัพธ์เป็น HTTP response
+  - ซ่อนคีย์ API ไว้หลังบ้าน ไม่ส่งไป frontend
 
 ## 5) หน้าเว็บหลัก
 
@@ -120,12 +142,23 @@
 
 ## 6) โครงสร้างไฟล์สำคัญ
 
-- `app/api/...` API Routes ทั้งหมด
+- `app/api/...` API Routes ทั้งหมด (controller layer)
 - `app/...` หน้าเว็บ
-- `lib/auth.ts` logic auth/token/hash
-- `lib/calorie.ts` สูตรคำนวณแคลอรี่
-- `lib/meal-planner.ts` logic สร้างแผนอาหาร
-- `lib/chat-advisor.ts` logic แนะนำโภชนาการจากบริบทและประวัติแชท
+- `lib/backend/auth.service.ts` business logic การสมัครสมาชิก/เข้าสู่ระบบ
+- `lib/backend/profile.service.ts` โหลดข้อมูลโปรไฟล์และสรุปรายวัน
+- `lib/backend/foods.service.ts` ค้นหาและกรองข้อมูลโภชนาการ
+- `lib/backend/calorie.service.ts` คำนวณและบันทึกเป้าหมายแคลอรี่
+- `lib/backend/meal-plan.service.ts` สร้างแผนอาหารสำหรับผู้ป่วยเบาหวาน
+- `lib/backend/logs.service.ts` เพิ่ม/ลบ/ดูบันทึกแคลอรี่รายวัน
+- `lib/backend/chat.service.ts` จัดการประวัติแชทและตอบคำแนะนำ
+- `lib/backend/errors.ts` นิยาม error แบบมี status code
+- `lib/backend/response.ts` helper ส่ง error response แบบมาตรฐาน
+- `lib/backend/summary.ts` utility รวมสำหรับสรุปแคลอรี่/สารอาหาร
+- `lib/auth.ts` logic auth/token/hash ระดับ utility
+- `lib/calorie.ts` สูตรคำนวณแคลอรี่เชิงโดเมน
+- `lib/meal-planner.ts` logic สร้างแผนอาหารเชิงโดเมน
+- `lib/chat-advisor.ts` rule-based advisor logic
+- `lib/ai-advisor.ts` integration กับ AI provider
 - `lib/validators.ts` schema validation
 - `prisma/schema.prisma` โครงสร้างฐานข้อมูล
 - `prisma/seed.ts` seed ข้อมูลอาหาร
@@ -159,6 +192,9 @@
 
 - `DATABASE_URL`
 - `JWT_SECRET`
+- `OPENAI_API_KEY` (ไม่บังคับ แต่ต้องมีหากต้องการตอบด้วย AI)
+- `OPENAI_MODEL` (เช่น `gpt-4.1-mini`)
+- `OPENAI_API_BASE_URL` (ค่าเริ่มต้น `https://api.openai.com/v1`)
 
 แนะนำ production:
 
@@ -174,6 +210,13 @@
 2. เปิดผ่าน `/chat` หรือ `/advisor`
 3. ถ้าเจอ redirect วน ให้ล้างคุกกี้แล้วล็อกอินใหม่
 4. ถ้าพึ่งดึงโค้ดใหม่ให้รัน `npm run db:push`
+
+### แชทไม่ตอบแบบ AI
+
+1. ตรวจสอบ `OPENAI_API_KEY` ในไฟล์ `.env`
+2. ตรวจสอบว่า backend ออกอินเทอร์เน็ตได้
+3. ตรวจ response จาก `POST /api/chat/advisor` ว่า `engine` เป็น `ai`
+4. ถ้า `engine` เป็น `rule-based` หมายถึงระบบ fallback ทำงานแทน AI
 
 ### Another next dev server is already running
 

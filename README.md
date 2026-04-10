@@ -77,3 +77,4 @@ npm run dev
 โปรเจกต์นี้ใช้ Next.js 16 + Prisma + SQLite และออกแบบให้ deploy ได้จริงระดับ production โดยควรเปลี่ยนฐานข้อมูลเป็น PostgreSQL หรือ MySQL เมื่อใช้งานจริงที่ scale สูง
 "# Food-Web" 
 "# Food-Web" 
+"# Food-Web" 

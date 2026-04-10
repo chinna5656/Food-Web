@@ -1,5 +1,5 @@
 import { calculateCalorieTarget } from "@/lib/calorie";
-import { badRequest } from "@/lib/backend/errors";
+import { badRequest } from "@/backend/errors";
 import { prisma } from "@/lib/prisma";
 import { calorieTargetSchema } from "@/lib/validators";
 

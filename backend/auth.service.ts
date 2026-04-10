@@ -1,5 +1,5 @@
 import { hashPassword, signAuthToken, verifyPassword } from "@/lib/auth";
-import { conflict, unauthorized, badRequest } from "@/lib/backend/errors";
+import { conflict, unauthorized, badRequest } from "@/backend/errors";
 import { prisma } from "@/lib/prisma";
 import { loginSchema, registerSchema } from "@/lib/validators";
 

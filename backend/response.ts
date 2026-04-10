@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { BackendError } from "@/lib/backend/errors";
+import { BackendError } from "@/backend/errors";
 
 export function respondWithError(error: unknown, fallbackMessage: string, logTag: string) {
   console.error(logTag, error);

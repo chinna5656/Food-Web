@@ -1,4 +1,4 @@
-import { badRequest } from "@/lib/backend/errors";
+import { badRequest } from "@/backend/errors";
 import { generateDiabetesMealPlan } from "@/lib/meal-planner";
 import { prisma } from "@/lib/prisma";
 import { mealPlanSchema } from "@/lib/validators";

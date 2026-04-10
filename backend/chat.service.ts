@@ -1,5 +1,5 @@
 import { isAiAdvisorEnabled, requestAiAdvisorReply } from "@/lib/ai-advisor";
-import { badRequest, notFound } from "@/lib/backend/errors";
+import { badRequest, notFound } from "@/backend/errors";
 import {
   generateAdvisorReply,
   type AdvisorContext,

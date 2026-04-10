@@ -1,6 +1,6 @@
 import { getUtcDayBounds } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
-import { summarizeNutrition } from "@/lib/backend/summary";
+import { summarizeNutrition } from "@/backend/summary";
 
 export async function getProfileSnapshot(userId: string, dateText?: string | null) {
   const { start, end, dateLabel } = getUtcDayBounds(dateText);

@@ -1,8 +1,8 @@
-import { badRequest, notFound } from "@/lib/backend/errors";
+import { badRequest, notFound } from "@/backend/errors";
 import { getUtcDayBounds } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 import { logCreateSchema } from "@/lib/validators";
-import { summarizeNutrition } from "@/lib/backend/summary";
+import { summarizeNutrition } from "@/backend/summary";
 
 export async function getLogsByDate(userId: string, dateText?: string | null) {
   const { start, end, dateLabel } = getUtcDayBounds(dateText);
